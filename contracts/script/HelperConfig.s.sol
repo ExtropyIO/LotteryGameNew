@@ -35,7 +35,7 @@ contract HelperConfig is Script {
         });
     }
     
-    function getAnvilConfig() public returns (NetworkConfig memory) {
+    function getAnvilConfig() public view returns (NetworkConfig memory) {
         // Deploy mocks if needed for local testing
         return NetworkConfig({
             deployerKey: vm.envUint("LOCAL_PRIVATE_KEY"),
