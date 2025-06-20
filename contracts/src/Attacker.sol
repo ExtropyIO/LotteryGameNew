@@ -9,7 +9,7 @@ contract Attacker {
 
     event LogFallback();
 
-    constructor(Lottery _l) public {
+    constructor(Lottery _l)  {
         l = Lottery(_l);
         owner = msg.sender;
     }

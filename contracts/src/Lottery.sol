@@ -8,7 +8,7 @@ contract Oracle{
 		seed = _seed;
 	}
 
-	function getRandomNumber() external returns (uint256){
+	function getRandomNumber() external view returns (uint256){
 		return block.number % seed;
 	}
 
@@ -90,8 +90,8 @@ contract Lottery {
 
 	// register a team
 	function registerTeam(address _walletAddress,string calldata _teamName, string calldata _password) external payable {
-		// 2 ether deposit to register a team
-		require(msg.value == 2 ether);
+		// 0.2 ether deposit to register a team
+		require(msg.value == 0.2 ether);
 		// add to mapping as well as another array
 		teams[_walletAddress] = Team(_teamName, _password, 5);
 		teamAddresses.push(_walletAddress);
@@ -129,6 +129,7 @@ contract Lottery {
 				return sent;
 			}
 	    }
+		return true;
 	}
 
 	function getTeamCount() public view returns (uint256){
