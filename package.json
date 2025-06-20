@@ -7,7 +7,28 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "lint": "biome check .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "contracts:build": "forge build",
+    "contracts:test": "forge test",
+    "contracts:deploy": "forge script script/Deploy.s.sol --rpc-url $ETH_RPC_URL --broadcast",
+    "contracts:verify": "forge verify-contract",
+
+    "anvil": "anvil --fork-url $MAINNET_RPC_URL",
+    "anvil:no-fork": "anvil",
+
+ 
+    "contracts:test:fork": "forge test --fork-url $MAINNET_RPC_URL",
+    
+
+    "deploy:local": "forge script contracts/script/Deploy.s.sol  --broadcast",
+    "deploy:sepolia": "forge script contracts/script/Deploy.s.sol --rpc-url sepolia --broadcast --verify",
+    "deploy:mainnet": "forge script contracts/script/Deploy.s.sol --rpc-url mainnet --broadcast --verify",
+    
+
+    "verify:sepolia": "forge verify-contract --chain-id 11155111 --etherscan-api-key $ETHERSCAN_API_KEY",
+    "verify:mainnet": "forge verify-contract --chain-id 1 --etherscan-api-key $ETHERSCAN_API_KEY"
+
+
   },
   "dependencies": {
     "@tanstack/react-query": "5.45.1",
