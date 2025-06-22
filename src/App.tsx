@@ -23,7 +23,7 @@ function App() {
   const { data: teamCount, refetch: refetchTeamCount } = useGetTeamCount();
 
   const fetchAllTeams = useCallback(async () => {
-    // --- FIX: Only fetch if connected and teamCount is a valid number ---
+    // Only fetch if connected and teamCount is a valid number
     if (!isConnected || typeof teamCount !== 'bigint' || !chain) {
       setTeams([]); // Clear teams if not connected or no data
       return;
@@ -68,14 +68,19 @@ function App() {
     }
   }, [teamCount, chain, isConnected, wagmiConfig]);
 
+  // Force refetch function
+  const forceRefetch = useCallback(() => {
+    refetchTeamCount();
+    setRefetchTrigger(prev => prev + 1);
+  }, [refetchTeamCount]);
 
-  // Refetch teams when the dependencies of fetchAllTeams change
+  // Refetch teams when the dependencies change
   useEffect(() => {
     fetchAllTeams();
   }, [fetchAllTeams]);
 
   // Use the event hook to trigger a refetch
-  useLotteryEvents(fetchAllTeams);
+  useLotteryEvents(forceRefetch);
 
   return (
     <div className="app-container">

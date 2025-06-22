@@ -8,7 +8,7 @@
   "11155111": {
     "name": "sepolia",
     "contracts": {
-      "Lottery": "0x783444D9F6bB3b9e34393A401aC8E824E016Ed43"
+      "Lottery": "0x4789F8F8129be6ecc77863AEE18Ba364B3083eE4"
     }
   },
   "31337": {

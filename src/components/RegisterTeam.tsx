@@ -15,6 +15,7 @@ export function RegisterTeam() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    handleRegisterClick();
   };
 
   const handleRegisterClick = () => {
@@ -26,7 +27,7 @@ export function RegisterTeam() {
     }
     
     if (teamName && walletAddress && password) {
-      registerTeam(walletAddress, teamName, password);
+      registerTeam(walletAddress as `0x${string}`, teamName, password);
     } else {
       setFormError('All fields are required.');
     }
@@ -35,7 +36,7 @@ export function RegisterTeam() {
   return (
     <div className="form-card">
       <h3>Register Team</h3>
-      <p className="small-text">(Requires a 2 ETH deposit)</p>
+      <p className="small-text">(Requires a 0.1 ETH deposit)</p>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="registerNameInput">Team Name</label>
@@ -68,7 +69,7 @@ export function RegisterTeam() {
             required
           />
         </div>
-        <button type="button" onClick={handleRegisterClick} disabled={isLoading} className="button">
+        <button type="submit" disabled={isLoading} className="button">
           {isLoading ? 'Registering...' : 'Register Team'}
         </button>
       </form>

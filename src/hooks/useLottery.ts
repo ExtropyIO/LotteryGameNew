@@ -4,9 +4,9 @@
 import {
   useAccount,
   useBalance,
-  useContractRead,
-  useContractWrite,
-  useWaitForTransactionReceipt, // <-- CORRECTED: Changed from useWaitForTransaction
+  useReadContract,
+  useWriteContract,
+  useWaitForTransactionReceipt,
   useWatchContractEvent,
 } from 'wagmi'
 import { lotteryContractConfig } from '../wagmi'
@@ -20,7 +20,6 @@ export type Team = {
   score: number;
 };
 
-
 /**
  * Fetches the total number of registered teams.
  */
@@ -28,12 +27,10 @@ export function useGetTeamCount() {
   const { chain } = useAccount();
   const contractAddress = chain ? lotteryContractConfig.address(chain.id) : undefined;
 
-  return useContractRead({
+  return useReadContract({
     ...lotteryContractConfig,
     address: contractAddress,
     functionName: 'getTeamCount',
-    // Watch for changes to refetch automatically
-    watch: true,
   });
 }
 
@@ -45,12 +42,14 @@ export function useGetTeamDetails(teamIndex: number) {
     const { chain } = useAccount();
     const contractAddress = chain ? lotteryContractConfig.address(chain.id) : undefined;
 
-    return useContractRead({
+    return useReadContract({
         ...lotteryContractConfig,
         address: contractAddress,
         functionName: 'getTeamDetails',
         args: [BigInt(teamIndex)],
-        enabled: teamIndex !== undefined, // Only run if teamIndex is valid
+        query: {
+          enabled: teamIndex !== undefined,
+        }
     });
 }
 
@@ -62,34 +61,43 @@ export function useRegisterTeam() {
   const { chain } = useAccount();
   const contractAddress = chain ? lotteryContractConfig.address(chain.id) : undefined;
 
-  const { data, isLoading, isSuccess, write, error } = useContractWrite({
-    ...lotteryContractConfig,
-    address: contractAddress,
-    functionName: 'registerTeam',
-  });
+  const { data: hash, isPending, isSuccess, writeContract, error } = useWriteContract();
 
   const {
     data: receipt,
-    isLoading: isPending,
-    isSuccess: txIsSuccess,
-  } = useWaitForTransactionReceipt({ hash: data?.hash }); // <-- CORRECTED HOOK
+    isLoading: isConfirming,
+    isSuccess: isConfirmed,
+  } = useWaitForTransactionReceipt({ 
+    hash,
+  });
 
   // Exposing a function to be called from the component
-  const registerTeam = (walletAddress: `0x${string}`, teamName: string, password: string) => {
-    if (write) {
-      write({
+  const registerTeam = async (walletAddress: `0x${string}`, teamName: string, password: string) => {
+    if (!contractAddress) {
+      console.error('No contract address found for chain:', chain?.id);
+      return;
+    }
+
+    try {
+      writeContract({
+        ...lotteryContractConfig,
+        address: contractAddress,
+        functionName: 'registerTeam',
         args: [walletAddress, teamName, password],
-        value: parseEther('2'), // The contract requires a 2 ETH deposit
+        value: parseEther('0.1'), // The contract requires a 0.1 ETH deposit
       });
+    } catch (err) {
+      console.error('Error calling writeContract:', err);
     }
   };
 
   return {
     registerTeam,
-    isLoading: isLoading || isPending,
-    isSuccess: isSuccess && txIsSuccess,
+    isLoading: isPending || isConfirming,
+    isSuccess: isSuccess && isConfirmed,
     error,
     receipt,
+    hash,
   };
 }
 
@@ -100,30 +108,34 @@ export function useMakeGuess() {
     const { chain } = useAccount();
     const contractAddress = chain ? lotteryContractConfig.address(chain.id) : undefined;
 
-    const { data, isLoading, isSuccess, write, error } = useContractWrite({
-        ...lotteryContractConfig,
-        address: contractAddress,
-        functionName: 'makeAGuess',
-    });
+    const { data: hash, isPending, isSuccess, writeContract, error } = useWriteContract();
 
     const {
         data: receipt,
-        isLoading: isPending,
-        isSuccess: txIsSuccess,
-    } = useWaitForTransactionReceipt({ hash: data?.hash }); // <-- CORRECTED HOOK
+        isLoading: isConfirming,
+        isSuccess: isConfirmed,
+    } = useWaitForTransactionReceipt({ 
+        hash,
+    });
 
     const makeGuess = (teamAddress: `0x${string}`, guess: number) => {
-        if(write) {
-            write({
-                args: [teamAddress, BigInt(guess)],
-            });
+        if (!contractAddress) {
+            console.error('No contract address found');
+            return;
         }
+
+        writeContract({
+            ...lotteryContractConfig,
+            address: contractAddress,
+            functionName: 'makeAGuess',
+            args: [teamAddress, BigInt(guess)],
+        });
     };
 
     return {
         makeGuess,
-        isLoading: isLoading || isPending,
-        isSuccess: isSuccess && txIsSuccess,
+        isLoading: isPending || isConfirming,
+        isSuccess: isSuccess && isConfirmed,
         error,
         receipt,
     };
@@ -144,7 +156,6 @@ export function useGetLotteryBalance(refetchTrigger: any) {
     useEffect(() => {
         refetch();
     }, [refetchTrigger, refetch]);
-
 
     return data;
 }
@@ -169,7 +180,7 @@ export function useLotteryEvents(refetch: () => void) {
     useWatchContractEvent({
         ...lotteryContractConfig,
         address: contractAddress,
-        eventName: 'LogGuessMade', // Ensure this event name matches your contract
+        eventName: 'LogGuessMade',
         onLogs: (logs) => {
             console.log('Guess Made Event:', logs);
             refetch();

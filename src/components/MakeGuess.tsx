@@ -14,6 +14,7 @@ export function MakeGuess() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    handleGuessClick();
   };
 
   const handleGuessClick = () => {
@@ -25,9 +26,9 @@ export function MakeGuess() {
     }
 
     if (teamAddress && guess) {
-      makeGuess(teamAddress, parseInt(guess, 10));
+      makeGuess(teamAddress as `0x${string}`, parseInt(guess, 10));
     } else {
-        setFormError('All fields are required.');
+      setFormError('All fields are required.');
     }
   };
 
@@ -57,7 +58,7 @@ export function MakeGuess() {
             required
           />
         </div>
-        <button type="button" onClick={handleGuessClick} disabled={isLoading} className="button">
+        <button type="submit" disabled={isLoading} className="button">
           {isLoading ? 'Submitting...' : 'Make a Guess'}
         </button>
       </form>
