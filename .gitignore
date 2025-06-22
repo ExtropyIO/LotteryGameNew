@@ -25,7 +25,6 @@ dist-ssr
 
 # Foundry
 contracts/cache/
-contracts/out/
 contracts/broadcast/
 
 # Foundry lib
