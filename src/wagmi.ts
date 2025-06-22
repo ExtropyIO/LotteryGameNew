@@ -28,14 +28,15 @@ const getContractAddress = (chainId: number): `0x${string}` | undefined => {
 	return undefined;
 };
 
-// Public RPC URLs for Sepolia
-const SEPOLIA_RPC_URLS = [
-  'https://rpc.sepolia.org',
-  'https://ethereum-sepolia-rpc.publicnode.com',
-  'https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161', // Public Infura endpoint
-  'https://rpc2.sepolia.org',
-  'https://eth-sepolia.g.alchemy.com/v2/demo', // Public Alchemy demo endpoint
-];
+// --- NEW: Alchemy Configuration ---
+// For security, it's best practice to use an environment variable for your API key.
+// You can create a `.env.local` file in your project root and add:
+// VITE_ALCHEMY_API_KEY="YOUR_API_KEY"
+// Then, you would use: const alchemyApiKey = import.meta.env.VITE_ALCHEMY_API_KEY;
+
+const ALCHEMY_API_KEY = 'f0ffpkJ7iHBv3ztyroy1j'; 
+const alchemySepoliaUrl = `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}`;
+// --- End of New Configuration ---
 
 export const config = createConfig({
   chains: [mainnet, sepolia, localhost],
@@ -44,11 +45,8 @@ export const config = createConfig({
   ],
   transports: {
     [mainnet.id]: http(),
-    [sepolia.id]: http(SEPOLIA_RPC_URLS[0], {
-      // Add fallback URLs
-      retryCount: 3,
-      timeout: 10000,
-    }),
+    // --- UPDATED: Using Alchemy for Sepolia ---
+    [sepolia.id]: http(alchemySepoliaUrl),
     [localhost.id]: http('http://127.0.0.1:8545'),
   },
 })

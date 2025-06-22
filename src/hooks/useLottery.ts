@@ -84,7 +84,7 @@ export function useRegisterTeam() {
         address: contractAddress,
         functionName: 'registerTeam',
         args: [walletAddress, teamName, password],
-        value: parseEther('0.1'), // The contract requires a 0.1 ETH deposit
+        value: parseEther('0.01'), // UPDATED: The contract now requires a 0.01 ETH deposit
       });
     } catch (err) {
       console.error('Error calling writeContract:', err);
@@ -154,8 +154,10 @@ export function useGetLotteryBalance(refetchTrigger: any) {
 
     // Refetch balance when the trigger changes
     useEffect(() => {
-        refetch();
-    }, [refetchTrigger, refetch]);
+        if (contractAddress) {
+            refetch();
+        }
+    }, [refetchTrigger, refetch, contractAddress]);
 
     return data;
 }
@@ -170,7 +172,7 @@ export function useLotteryEvents(refetch: () => void) {
     useWatchContractEvent({
         ...lotteryContractConfig,
         address: contractAddress,
-        eventName: 'TeamRegistered',
+        eventName: 'LogTeamRegistered',
         onLogs: (logs) => {
             console.log('Team Registered Event:', logs);
             refetch();

@@ -20,12 +20,29 @@ function App() {
   const [isLoadingTeams, setIsLoadingTeams] = useState(false);
   const [refetchTrigger, setRefetchTrigger] = useState(0);
 
-  const { data: teamCount, refetch: refetchTeamCount } = useGetTeamCount();
+  // Get team count and the detailed status/error of the fetch
+  const { 
+    data: teamCount, 
+    refetch: refetchTeamCount, 
+    isSuccess: isTeamCountSuccess,
+    status: teamCountStatus,
+    error: teamCountError,
+  } = useGetTeamCount();
+
+  // --- DEBUGGING BLOCK ---
+  // This will log the detailed status of the team count query
+  useEffect(() => {
+    console.log('%c[Debug] Team Count Hook Status:', 'color: orange; font-weight: bold;', {
+        status: teamCountStatus,
+        isSuccess: isTeamCountSuccess,
+        teamCount: teamCount?.toString(),
+        error: teamCountError,
+    });
+  }, [teamCountStatus, isTeamCountSuccess, teamCount, teamCountError]);
+  // --- END DEBUGGING BLOCK ---
 
   const fetchAllTeams = useCallback(async () => {
-    // Only fetch if connected and teamCount is a valid number
-    if (!isConnected || typeof teamCount !== 'bigint' || !chain) {
-      setTeams([]); // Clear teams if not connected or no data
+    if (!isConnected || !isTeamCountSuccess || typeof teamCount !== 'bigint' || !chain) {
       return;
     }
     
@@ -55,9 +72,10 @@ function App() {
       const validResults: Team[] = results
         .filter(r => r.status === 'success' && r.result)
         .map(r => {
+          if (!Array.isArray(r.result)) return null;
           const [name, address, score] = r.result as [string, `0x${string}`, bigint];
           return { name, address, score: Number(score) };
-        });
+        }).filter((r): r is Team => r !== null);
       
       setTeams(validResults);
     } catch (e) {
@@ -66,21 +84,27 @@ function App() {
     } finally {
       setIsLoadingTeams(false);
     }
-  }, [teamCount, chain, isConnected, wagmiConfig]);
+  }, [teamCount, isTeamCountSuccess, chain, isConnected, wagmiConfig]);
 
-  // Force refetch function
   const forceRefetch = useCallback(() => {
     refetchTeamCount();
     setRefetchTrigger(prev => prev + 1);
   }, [refetchTeamCount]);
 
-  // Refetch teams when the dependencies change
   useEffect(() => {
     fetchAllTeams();
   }, [fetchAllTeams]);
 
-  // Use the event hook to trigger a refetch
   useLotteryEvents(forceRefetch);
+
+  useEffect(() => {
+    if (isConnected) {
+      const intervalId = setInterval(() => {
+        forceRefetch();
+      }, 10000);
+      return () => clearInterval(intervalId);
+    }
+  }, [isConnected, forceRefetch]);
 
   return (
     <div className="app-container">

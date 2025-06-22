@@ -36,7 +36,7 @@ export function RegisterTeam() {
   return (
     <div className="form-card">
       <h3>Register Team</h3>
-      <p className="small-text">(Requires a 0.1 ETH deposit)</p>
+      <p className="small-text">(Requires a 0.01 ETH deposit)</p>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="registerNameInput">Team Name</label>
