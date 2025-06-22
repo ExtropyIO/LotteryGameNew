@@ -20,7 +20,7 @@
     "contracts:test:fork": "forge test --fork-url $MAINNET_RPC_URL",
     
 
-    "deploy:local": "forge script contracts/script/Deploy.s.sol  --broadcast",
+    "deploy:local": "forge script contracts/script/Deploy.s.sol  --rpc-url local --broadcast",
     "deploy:sepolia": "forge script contracts/script/Deploy.s.sol --rpc-url sepolia --broadcast --verify",
     "deploy:mainnet": "forge script contracts/script/Deploy.s.sol --rpc-url mainnet --broadcast --verify",
     

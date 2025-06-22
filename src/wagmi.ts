@@ -1,38 +1,50 @@
+// FILE: src/wagmi.ts
+// PURPOSE: Configures Wagmi, chains, and contract details.
+
 import { http, createConfig } from 'wagmi'
 import { mainnet, sepolia, localhost } from 'wagmi/chains'
-import { coinbaseWallet, injected, walletConnect } from 'wagmi/connectors'
+import { injected } from 'wagmi/connectors' 
 
-// Import contract ABI
-import MyContractABI from '../contracts/out/MyContract.sol/MyContract.json'
-
-// Import deployment addresses
+import LotteryABI from '../contracts/out/Lottery.sol/Lottery.json'
 import deployments from '../contracts/deployments.json'
 
-// Contract addresses by network
-const contractAddresses = {
-  [mainnet.id]: deployments[1]?.contracts?.MyContract || '',
-  [sepolia.id]: deployments[11155111]?.contracts?.MyContract || '',
-  [localhost.id]: deployments[31337]?.contracts?.MyContract || '',
-}
+// Type definition for the deployments JSON
+type Deployments = {
+  [chainId: string]: {
+    name: string;
+    contracts: {
+      [contractName: string]: `0x${string}`;
+    };
+  };
+};
+
+const getContractAddress = (chainId: number): `0x${string}` | undefined => {
+	const chainIdStr = String(chainId);
+  const typedDeployments = deployments as Deployments;
+	
+	if (typedDeployments[chainIdStr]?.contracts?.Lottery) {
+		return typedDeployments[chainIdStr].contracts.Lottery;
+	}
+	return undefined;
+};
+
 
 export const config = createConfig({
   chains: [mainnet, sepolia, localhost],
   connectors: [
     injected(),
-    coinbaseWallet(),
-    walletConnect({ projectId: import.meta.env.VITE_WC_PROJECT_ID }),
   ],
   transports: {
     [mainnet.id]: http(),
     [sepolia.id]: http(),
-    [localhost.id]: http('http://localhost:8545'),
+    // --- FIX: Corrected the localhost RPC URL ---
+    [localhost.id]: http('[http://127.0.0.1:8545](http://127.0.0.1:8545)'),
   },
 })
 
-// Export contract config
-export const myContractConfig = {
-  abi: MyContractABI.abi,
-  address: (chainId: number) => contractAddresses[chainId] || '',
+export const lotteryContractConfig = {
+  abi: LotteryABI.abi,
+  address: (chainId: number) => getContractAddress(chainId),
 } as const
 
 declare module 'wagmi' {
@@ -40,5 +52,3 @@ declare module 'wagmi' {
     config: typeof config
   }
 }
-
-
