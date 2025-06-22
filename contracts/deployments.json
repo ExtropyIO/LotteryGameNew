@@ -2,19 +2,19 @@
   "1": {
     "name": "mainnet",
     "contracts": {
-      "MyContract": ""
+      "Lottery": ""
     }
   },
   "11155111": {
     "name": "sepolia",
     "contracts": {
-      "MyContract": ""
+      "Lottery": "0x743Bf3E91Eee7d2818DD8dD2298D58A5E3A170C8"
     }
   },
   "31337": {
     "name": "localhost",
     "contracts": {
-      "MyContract": ""
+      "Lottery": ""
     }
   }
 }
