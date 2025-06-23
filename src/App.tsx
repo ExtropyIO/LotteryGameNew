@@ -18,31 +18,19 @@ function App() {
   const wagmiConfig = useConfig();
   const [teams, setTeams] = useState<Team[]>([]);
   const [isLoadingTeams, setIsLoadingTeams] = useState(false);
-  const [refetchTrigger, setRefetchTrigger] = useState(0);
 
-  // Get team count and the detailed status/error of the fetch
-  const { 
-    data: teamCount, 
-    refetch: refetchTeamCount, 
-    isSuccess: isTeamCountSuccess,
-    status: teamCountStatus,
-    error: teamCountError,
-  } = useGetTeamCount();
-
-  // --- DEBUGGING BLOCK ---
-  // This will log the detailed status of the team count query
-  useEffect(() => {
-    console.log('%c[Debug] Team Count Hook Status:', 'color: orange; font-weight: bold;', {
-        status: teamCountStatus,
-        isSuccess: isTeamCountSuccess,
-        teamCount: teamCount?.toString(),
-        error: teamCountError,
-    });
-  }, [teamCountStatus, isTeamCountSuccess, teamCount, teamCountError]);
-  // --- END DEBUGGING BLOCK ---
+  // UPDATED: Re-introducing a nonce to reliably trigger refetches
+  const [refetchNonce, setRefetchNonce] = useState(0);
+  
+  const { data: teamCount, refetch: refetchTeamCount, isSuccess: isTeamCountSuccess } = useGetTeamCount();
 
   const fetchAllTeams = useCallback(async () => {
-    if (!isConnected || !isTeamCountSuccess || typeof teamCount !== 'bigint' || !chain) {
+    // First, ensure the team count is up-to-date. This is important for the first load.
+    if (!isTeamCountSuccess) {
+       await refetchTeamCount();
+    }
+
+    if (!isConnected || typeof teamCount !== 'bigint' || !chain) {
       return;
     }
     
@@ -84,31 +72,34 @@ function App() {
     } finally {
       setIsLoadingTeams(false);
     }
-  }, [teamCount, isTeamCountSuccess, chain, isConnected, wagmiConfig]);
+  }, [teamCount, isTeamCountSuccess, isConnected, chain, wagmiConfig, refetchTeamCount]);
 
+  // UPDATED: A robust function to force a full data refetch
   const forceRefetch = useCallback(() => {
-    refetchTeamCount();
-    setRefetchTrigger(prev => prev + 1);
-  }, [refetchTeamCount]);
+    // When called, this will always trigger a full data refresh
+    setRefetchNonce(nonce => nonce + 1);
+  }, []);
 
+  // UPDATED: The main data fetching effect now listens for the nonce
   useEffect(() => {
     fetchAllTeams();
-  }, [fetchAllTeams]);
+  }, [fetchAllTeams, refetchNonce]); // It runs when fetchAllTeams changes OR when the nonce changes.
 
   useLotteryEvents(forceRefetch);
 
   useEffect(() => {
     if (isConnected) {
       const intervalId = setInterval(() => {
+        console.log("Periodically refreshing all data...");
         forceRefetch();
-      }, 10000);
+      }, 10000); 
       return () => clearInterval(intervalId);
     }
   }, [isConnected, forceRefetch]);
 
   return (
     <div className="app-container">
-      <Header refetchTrigger={refetchTrigger} />
+      <Header />
       <main className="main-content">
         <div className="content-grid">
           <div className="forms-column">

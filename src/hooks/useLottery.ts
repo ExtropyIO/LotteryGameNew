@@ -11,7 +11,7 @@ import {
 } from 'wagmi'
 import { lotteryContractConfig } from '../wagmi'
 import { parseEther } from 'viem';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 
 // A type definition for a Team object
 export type Team = {
@@ -84,7 +84,7 @@ export function useRegisterTeam() {
         address: contractAddress,
         functionName: 'registerTeam',
         args: [walletAddress, teamName, password],
-        value: parseEther('0.01'), // UPDATED: The contract now requires a 0.01 ETH deposit
+        value: parseEther('0.01'), 
       });
     } catch (err) {
       console.error('Error calling writeContract:', err);
@@ -144,20 +144,14 @@ export function useMakeGuess() {
 /**
  * Hook to get the ETH balance of the lottery contract.
  */
-export function useGetLotteryBalance(refetchTrigger: any) {
+export function useGetLotteryBalance() {
     const { chain } = useAccount();
     const contractAddress = chain ? lotteryContractConfig.address(chain.id) : undefined;
 
-    const { data, refetch } = useBalance({
+    const { data } = useBalance({
         address: contractAddress,
+        refetchInterval: 10000,
     });
-
-    // Refetch balance when the trigger changes
-    useEffect(() => {
-        if (contractAddress) {
-            refetch();
-        }
-    }, [refetchTrigger, refetch, contractAddress]);
 
     return data;
 }
@@ -169,6 +163,7 @@ export function useLotteryEvents(refetch: () => void) {
     const { chain } = useAccount();
     const contractAddress = chain ? lotteryContractConfig.address(chain.id) : undefined;
 
+    // For new team registrations
     useWatchContractEvent({
         ...lotteryContractConfig,
         address: contractAddress,
@@ -179,12 +174,24 @@ export function useLotteryEvents(refetch: () => void) {
         },
     });
 
+    // For any guess made
     useWatchContractEvent({
         ...lotteryContractConfig,
         address: contractAddress,
         eventName: 'LogGuessMade',
         onLogs: (logs) => {
             console.log('Guess Made Event:', logs);
+            refetch();
+        },
+    });
+
+    // For when a team's guess is correct (and their score changes)
+    useWatchContractEvent({
+        ...lotteryContractConfig,
+        address: contractAddress,
+        eventName: 'LogTeamCorrectGuess',
+        onLogs: (logs) => {
+            console.log('Team Correct Guess Event (score updated):', logs);
             refetch();
         },
     });
