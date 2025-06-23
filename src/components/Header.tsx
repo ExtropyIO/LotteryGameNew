@@ -5,9 +5,10 @@ import { useGetLotteryBalance } from '../hooks/useLottery'
 import { formatEther } from 'viem'
 import { useAccount } from 'wagmi'
 
-export function Header({ refetchTrigger }: { refetchTrigger: number }) {
+// UPDATED: The refetchTrigger prop has been removed
+export function Header() {
   const { chain } = useAccount();
-  const balance = useGetLotteryBalance(refetchTrigger);
+  const balance = useGetLotteryBalance();
 
   return (
     <nav className="navbar">
