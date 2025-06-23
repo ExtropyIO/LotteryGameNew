@@ -82,16 +82,11 @@ contract Lottery {
 		teamAddresses.push(address(0));
 	}
 
-	// reset the lottery
-	function reset(uint8 _newSeed) public view {
-	    uint endTime = block.timestamp + 7 days;
-	    LotteryDetails memory thisLottery = LotteryDetails({endTime : endTime, seed : _newSeed});
-	}
 
 	// register a team
 	function registerTeam(address _walletAddress,string calldata _teamName, string calldata _password) external payable {
-		// 0.2 ether deposit to register a team
-		require(msg.value == 0.2 ether);
+		// 0.1 ether deposit to register a team
+		require(msg.value >= 0.01 ether);
 		// add to mapping as well as another array
 		teams[_walletAddress] = Team(_teamName, _password, 5);
 		teamAddresses.push(_walletAddress);
@@ -101,6 +96,7 @@ contract Lottery {
 	// make your guess , return a success flag
 	function makeAGuess(address _team,uint256 _guess) external returns (bool) {
 		// no checks for team being registered (???)
+		unchecked {
 		emit LogGuessMade(_team);
 		// get a random number
 		uint256 random = oracle.getRandomNumber();
@@ -114,6 +110,7 @@ contract Lottery {
 			// take away a point (!!!)
 		    teams[_team].points -= 1;
 			return false;
+		}
 		}
 	}
 
@@ -144,6 +141,17 @@ contract Lottery {
 	function resetOracle(uint8 _newSeed) internal {
 	    oracle = new Oracle(_newSeed);
 	}
+
+	// reset the lottery
+	function reset(uint8 _newSeed) public  {
+	    uint endTime = block.timestamp + 7 days;
+	    LotteryDetails memory thisLottery = LotteryDetails({endTime : endTime, seed : _newSeed});
+		delete teamAddresses;
+		this.initialiseLottery(_newSeed);
+		
+
+	}
+
 
 	// catch any ether sent to the contract
 	fallback() external payable {
