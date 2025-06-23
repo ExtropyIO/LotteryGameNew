@@ -1,0 +1,20 @@
+{
+  "1": {
+    "name": "mainnet",
+    "contracts": {
+      "Lottery": ""
+    }
+  },
+  "11155111": {
+    "name": "sepolia",
+    "contracts": {
+      "Lottery": "0x9a95C1E5E8af2a095781B391264D639b5C389e18"
+    }
+  },
+  "31337": {
+    "name": "localhost",
+    "contracts": {
+      "Lottery": ""
+    }
+  }
+}
